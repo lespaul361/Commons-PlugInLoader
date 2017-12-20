@@ -3,18 +3,21 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.habibsweb.commons.pluginloader;
+package com.github.lespaul361.commons.pluginloader;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
 /**
+ * A class to aid in loading plug-ins for a parent project using multiple
+ * threads
  *
- * @author David Hamilton
+ * @author Charles Hamilton
  */
 public class PlugInLoader {
 
@@ -23,21 +26,44 @@ public class PlugInLoader {
     private List<Class> classes = new ArrayList<>();
 
     /**
-     * Creates a new instance of the PlugInLoader
+     * Creates a new instance of the PlugInLoader and finds files in the given
+     * directory with the extension "jar"
      *
      * @param dir the directory to search for <code>plugins</code>
      * @return a new PlugInLoader
      */
     public static PlugInLoader createInstance(File dir) {
-        return new PlugInLoader(dir);
+        return new PlugInLoader(dir, Arrays.asList(new String[]{"jar"}));
     }
 
-    PlugInLoader(File dir) {
+    /**
+     * Creates a new instance of the PlugInLoader and finds files in the given
+     * directory with the extensions supplied in the supplied list
+     *
+     * @param dir the directory to search for <code>plugins</code>
+     * @param fileExtensions list of file extensions
+     * @return a new PlugInLoader
+     */
+    public static PlugInLoader createInstance(File dir, List<String> fileExtensions) {
+        return new PlugInLoader(dir, fileExtensions);
+    }
+
+    PlugInLoader(File dir, List<String> fileExtensions) {
         if (!dir.isDirectory()) {
             dir = dir.getParentFile();
         }
         this.dir = dir;
-        fileTypes.add("jar");
+        if (fileExtensions == null || fileExtensions.isEmpty()) {
+            fileTypes.add("jar");
+        } else {
+            for (String ext : fileExtensions) {
+                if (ext.startsWith(".")) {
+                    fileTypes.add(ext.substring(1, ext.length()));
+                } else {
+                    fileTypes.add(ext);
+                }
+            }
+        }
     }
 
     /**
@@ -63,6 +89,11 @@ public class PlugInLoader {
         System.gc();
     }
 
+    /**
+     * Gets the <code>Enumerator</code> for the collection of classes
+     *
+     * @return enumerator
+     */
     public Enumeration enumerator() {
         return new PlugInEnumerator(classes);
     }
